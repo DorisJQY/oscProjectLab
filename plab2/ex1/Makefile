@@ -6,5 +6,6 @@ all:
 run: all
 	./main.out
 
-
+memtest:
+	valgrind --leak-check=yes ./main.out
 

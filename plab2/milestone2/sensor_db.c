@@ -7,7 +7,7 @@
 #include "logger.h"
 #include <sys/wait.h>
 
-#define SIZE 25
+#define SIZE 100
 #define READ_END 0
 #define WRITE_END 1
 
@@ -36,10 +36,28 @@ FILE * open_db(char * filename, bool append)
     if(pid == 0)
     {
       create_log_process();
+      close(fd[WRITE_END]);
+      while(1)
+      {
+        ssize_t num = read(fd[READ_END],rmsg,SIZE);
+        if(num <= 0)
+        {
+          break;
+        }
+        rmsg[num] = '\0';
+        printf("Received message: %s\n", rmsg);
+        write_to_log_process(rmsg);
+        memset(rmsg, 0, sizeof(rmsg));
+        if(strcmp(rmsg, "Data file closed.") == 0)
+        {
+          close(fd[READ_END]);
+          end_log_process();
+          break;
+        }
+      }
     }
     logger_initialize = true;
   }
-
   if(pid > 0)
   {
     close(fd[READ_END]);
@@ -53,12 +71,8 @@ FILE * open_db(char * filename, bool append)
     }
     snprintf(wmsg, SIZE, "Data file opened.");
     write(fd[WRITE_END],wmsg,strlen(wmsg)+1);
-  }
-  else
-  {
-    close(fd[WRITE_END]);
-    read(fd[READ_END],rmsg,SIZE);
-    write_to_log_process(rmsg);
+    sleep(1);
+    memset(wmsg, 0, sizeof(wmsg));
   }
   return fp;
 }
@@ -75,11 +89,8 @@ int insert_sensor(FILE * f, sensor_id_t id, sensor_value_t value, sensor_ts_t ts
     i = fprintf(f,"%u, %.6f, %ld\n",id,value,ts);
     snprintf(wmsg, SIZE, "Data inserted.");
     write(fd[WRITE_END],wmsg,strlen(wmsg)+1);
-  }
-  else
-  {
-    read(fd[READ_END],rmsg,SIZE);
-    write_to_log_process(rmsg);
+    sleep(1);
+    memset(wmsg, 0, sizeof(wmsg));
   }
   return i;
 }
@@ -96,14 +107,9 @@ int close_db(FILE * f)
     i = fclose(f);
     snprintf(wmsg, SIZE, "Data file closed.");
     write(fd[WRITE_END],wmsg,strlen(wmsg)+1);
+    sleep(1);
+    memset(wmsg, 0, sizeof(wmsg));
     close(fd[WRITE_END]);
-  }
-  else
-  {
-    read(fd[READ_END],rmsg,SIZE);
-    close(fd[READ_END]);
-    write_to_log_process(rmsg);
-    end_log_process();
   }
   waitpid(pid, NULL, 0);
   return i;

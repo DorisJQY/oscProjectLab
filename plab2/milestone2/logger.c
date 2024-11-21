@@ -13,7 +13,9 @@ int write_to_log_process(char *msg)
 
   time(&now);
   local = localtime(&now);
-  strftime(time_string, sizeof(time), "%a %b %d %H:%M:%S %Y", local);
+  strftime(time_string, sizeof(time_string), "%a %b %d %H:%M:%S %Y", local);
+  
+  printf("Debug: Received message: %s\n", msg);
 
   fprintf(fp, "%d - %s - %s\n", sequence_number, time_string, msg);
   fflush(fp);

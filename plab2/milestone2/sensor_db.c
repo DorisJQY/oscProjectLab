@@ -34,82 +34,55 @@ FILE * open_db(char * filename, bool append)
       return NULL;
     }
 
-    if (pid == 0) { // 子进程逻辑
-            create_log_process();
-            close(fd[WRITE_END]); // 子进程关闭写端
+    if(pid == 0)
+    {
+      create_log_process();
+      close(fd[WRITE_END]);
 
-            while (1) {
-                ssize_t num = read(fd[READ_END], rmsg, SIZE);
-                if (num > 0) {
-                    rmsg[num] = '\0'; // 确保字符串以 '\0' 结尾
-                    printf("Received message: %s\n", rmsg);
-                    write_to_log_process(rmsg);
+      while(1)
+      {
+        ssize_t num = read(fd[READ_END], rmsg, SIZE);
+        if(num > 0)
+        {
+          rmsg[num] = '\0';
+          printf("Received message: %s\n", rmsg);
+          write_to_log_process(rmsg);
 
-                    if (strcmp(rmsg, "Data file closed.") == 0) {
-                        printf("Debug: Received termination message. Exiting.\n");
-                        break;
-                    }
-                } else if (num == 0) { // 管道关闭
-                    printf("Debug: Pipe closed. Exiting.\n");
-                    break;
-                } else { // 读取错误
-                    perror("Error reading from pipe");
-                    break;
-                }
-            }
-
-            close(fd[READ_END]); // 关闭读端
-            end_log_process();
-            exit(0); // 子进程正常退出
+          if(strcmp(rmsg, "Data file closed.") == 0)
+          {
+            printf("Debug: Received termination message. Exiting.\n");
+            break;
+          }
         }
+        else
+        {
+          break;
+        }
+      }
 
-        logger_initialize = true; // 确保初始化逻辑只执行一次
-    }
+      close(fd[READ_END]);
+      end_log_process();
+      exit(0);
+      }
 
-    //if(pid == 0)
-    //{
-      //create_log_process();
-      //close(fd[WRITE_END]);
-      //bool end = false;
-      //while(1)
-      //{
-        //ssize_t num = read(fd[READ_END],rmsg,SIZE);
-        //if(num <= 0)
-        //{
-          //if(end)
-          //{
-            //close(fd[READ_END]);
-            //end_log_process();
-            //break;
-          //}
-        //}
-        //rmsg[num] = '\0';
-        //printf("Received message: %s\n", rmsg);
-        //write_to_log_process(rmsg);
-        //if(strcmp(rmsg, "Data file closed.") == 0)
-        //{
-          //end = true;
-        //}
-        //memset(rmsg, 0, SIZE);
-      //}
-    //}
-    //logger_initialize = true;
-  //}
-  if(pid > 0)
-  {
-    close(fd[READ_END]);
-    if(append)
+    else if(pid > 0)
     {
-      fp = fopen(filename,"a");
+      close(fd[READ_END]);
+      if(append)
+      {
+        fp = fopen(filename,"a");
+      }
+      else
+      {
+        fp = fopen(filename,"w");
+      }
+      snprintf(wmsg, SIZE, "Data file opened.");
+      printf("Sent message: %s\n", wmsg);
+      write(fd[WRITE_END],wmsg,strlen(wmsg)+1);
+      usleep(1000);
+      memset(wmsg, 0, sizeof(wmsg));
     }
-    else
-    {
-      fp = fopen(filename,"w");
-    }
-    snprintf(wmsg, SIZE, "Data file opened.");
-    printf("Sent message: %s\n", wmsg);
-    write(fd[WRITE_END],wmsg,strlen(wmsg)+1);
-    memset(wmsg, 0, sizeof(wmsg));
+    logger_initialize = true;
   }
   return fp;
 }
@@ -128,6 +101,7 @@ int insert_sensor(FILE * f, sensor_id_t id, sensor_value_t value, sensor_ts_t ts
     snprintf(wmsg, SIZE, "Data inserted.");
     printf("Sent message: %s\n", wmsg);
     write(fd[WRITE_END],wmsg,strlen(wmsg)+1);
+    usleep(1000);
     memset(wmsg, 0, sizeof(wmsg));
   }
   return i;
@@ -147,6 +121,7 @@ int close_db(FILE * f)
     snprintf(wmsg, SIZE, "Data file closed.");
     printf("Sent message: %s\n", wmsg);
     write(fd[WRITE_END],wmsg,strlen(wmsg)+1);
+    usleep(1000);
     memset(wmsg, 0, sizeof(wmsg));
     close(fd[WRITE_END]);
   }

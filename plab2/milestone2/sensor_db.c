@@ -45,12 +45,10 @@ FILE * open_db(char * filename, bool append)
         if(num > 0)
         {
           rmsg[num] = '\0';
-          printf("Received message: %s\n", rmsg);
           write_to_log_process(rmsg);
 
           if(strcmp(rmsg, "Data file closed.") == 0)
           {
-            printf("Debug: Received termination message. Exiting.\n");
             break;
           }
         }
@@ -63,7 +61,7 @@ FILE * open_db(char * filename, bool append)
       close(fd[READ_END]);
       end_log_process();
       exit(0);
-      }
+    }
 
     else if(pid > 0)
     {
@@ -77,9 +75,7 @@ FILE * open_db(char * filename, bool append)
         fp = fopen(filename,"w");
       }
       snprintf(wmsg, SIZE, "Data file opened.");
-      printf("Sent message: %s\n", wmsg);
       write(fd[WRITE_END],wmsg,strlen(wmsg)+1);
-      usleep(1000);
       memset(wmsg, 0, sizeof(wmsg));
     }
     logger_initialize = true;
@@ -99,9 +95,7 @@ int insert_sensor(FILE * f, sensor_id_t id, sensor_value_t value, sensor_ts_t ts
     }
     i = fprintf(f,"%u, %.6f, %ld\n",id,value,ts);
     snprintf(wmsg, SIZE, "Data inserted.");
-    printf("Sent message: %s\n", wmsg);
     write(fd[WRITE_END],wmsg,strlen(wmsg)+1);
-    usleep(1000);
     memset(wmsg, 0, sizeof(wmsg));
   }
   return i;
@@ -119,9 +113,7 @@ int close_db(FILE * f)
     }
     i = fclose(f);
     snprintf(wmsg, SIZE, "Data file closed.");
-    printf("Sent message: %s\n", wmsg);
     write(fd[WRITE_END],wmsg,strlen(wmsg)+1);
-    usleep(1000);
     memset(wmsg, 0, sizeof(wmsg));
     close(fd[WRITE_END]);
   }

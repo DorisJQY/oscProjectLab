@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 
 int sequence_number = 0;
 FILE* fp = NULL;
@@ -14,12 +15,15 @@ int write_to_log_process(char *msg)
   time(&now);
   local = localtime(&now);
   strftime(time_string, sizeof(time_string), "%a %b %d %H:%M:%S %Y", local);
-  
-  printf("Debug: Received message: %s\n", msg);
-  
-  fprintf(fp, "%d - %s - %s\n", sequence_number, time_string, msg);
-  fflush(fp);
-  sequence_number++;
+
+  const char *current_string = msg;
+  while (*current_string != '\0')
+  {
+    size_t length = strlen(current_string);
+    fprintf(fp, "%d - %s - %.*s\n", sequence_number++, time_string, (int)length, current_string);
+    fflush(fp);
+    current_string += length + 1;
+  }
   return 0;
 }
 

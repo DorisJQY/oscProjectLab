@@ -6,3 +6,9 @@ run: all
 
 zip:
 	zip milestone2.zip *.c *.h Makefile
+
+memtest: all
+	valgrind --leak-check=yes ./main.out
+
+clean:
+	rm -r main.out

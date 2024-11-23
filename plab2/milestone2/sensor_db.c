@@ -19,67 +19,62 @@ char rmsg[SIZE];
 FILE * open_db(char * filename, bool append)
 {
   FILE *fp = NULL;
-  static bool logger_initialize = false;
-  if(!logger_initialize)
+  if(pipe(fd) == -1)
   {
-    if(pipe(fd) == -1)
-    {
-      printf("pipe failed");
-      return NULL;
-    }
-    pid = fork();
-    if(pid < 0)
-    {
-      printf("fork failed");
-      return NULL;
-    }
+    printf("pipe failed");
+    return NULL;
+  }
+  pid = fork();
+  if(pid < 0)
+  {
+    printf("fork failed");
+    return NULL;
+  }
 
-    if(pid == 0)
-    {
-      create_log_process();
-      close(fd[WRITE_END]);
+  if(pid == 0)
+  {
+    create_log_process();
+    close(fd[WRITE_END]);
 
-      while(1)
+    while(1)
+    {
+      ssize_t num = read(fd[READ_END], rmsg, SIZE);
+      if(num > 0)
       {
-        ssize_t num = read(fd[READ_END], rmsg, SIZE);
-        if(num > 0)
-        {
-          rmsg[num] = '\0';
-          write_to_log_process(rmsg);
+        rmsg[num] = '\0';
+        write_to_log_process(rmsg);
 
-          if(strcmp(rmsg, "Data file closed.") == 0)
-          {
-            break;
-          }
-        }
-        else
+        if(strcmp(rmsg, "Data file closed.") == 0)
         {
           break;
         }
       }
-
-      close(fd[READ_END]);
-      end_log_process();
-      exit(0);
-    }
-
-    else if(pid > 0)
-    {
-      close(fd[READ_END]);
-      if(append)
-      {
-        fp = fopen(filename,"a");
-      }
       else
       {
-        fp = fopen(filename,"w");
+        break;
       }
-      snprintf(wmsg, SIZE, "Data file opened.");
-      write(fd[WRITE_END],wmsg,strlen(wmsg)+1);
-      memset(wmsg, 0, sizeof(wmsg));
     }
-    logger_initialize = true;
+    close(fd[READ_END]);
+    end_log_process();
+    exit(0);
   }
+
+  else if(pid > 0)
+  {
+    close(fd[READ_END]);
+    if(append)
+    {
+      fp = fopen(filename,"a");
+    }
+    else
+    {
+      fp = fopen(filename,"w");
+    }
+    snprintf(wmsg, SIZE, "Data file opened.");
+    write(fd[WRITE_END],wmsg,strlen(wmsg)+1);
+    memset(wmsg, 0, sizeof(wmsg));
+  }
+
   return fp;
 }
 

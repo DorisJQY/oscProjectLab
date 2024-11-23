@@ -17,7 +17,7 @@ int write_to_log_process(char *msg)
   strftime(time_string, sizeof(time_string), "%a %b %d %H:%M:%S %Y", local);
 
   const char *current_string = msg;
-  while (*current_string != '\0')
+  while(*current_string != '\0')
   {
     size_t length = strlen(current_string);
     fprintf(fp, "%d - %s - %.*s\n", sequence_number++, time_string, (int)length, current_string);

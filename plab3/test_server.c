@@ -12,7 +12,8 @@
 /**
  * Implements a sequential test server (only one connection at the same time)
  */
-
+int active_conn = 0;
+pthread_mutex_t conn_mutex = PTHREAD_MUTEX_INITIALIZER;
 void* client_handle(void* arg) {
     tcpsock_t* client = (tcpsock_t*)arg;
     sensor_data_t data;
@@ -43,6 +44,9 @@ void* client_handle(void* arg) {
         printf("Error occurred on connection to peer\n");
 
     tcp_close(&client);
+    pthread_mutex_lock(&conn_mutex);
+    active_conn--;
+    pthread_mutex_unlock(&conn_mutex);
     return NULL;
 }
 
@@ -50,8 +54,6 @@ void* client_handle(void* arg) {
 int main(int argc, char *argv[]) {
     tcpsock_t *server, *client;
     int conn_counter = 0;
-    int active_conn = 0;
-    pthread_mutex_t conn_mutex = PTHREAD_MUTEX_INITIALIZER;
 
     if(argc < 3) {
     	printf("Please provide the right arguments: first the port, then the max nb of clients");
@@ -67,7 +69,6 @@ int main(int argc, char *argv[]) {
     pthread_t tid;
     while (1) {
         pthread_mutex_lock(&conn_mutex);
-
         if (conn_counter >= MAX_CONN && active_conn == 0) {
             pthread_mutex_unlock(&conn_mutex);
             break;
@@ -89,11 +90,11 @@ int main(int argc, char *argv[]) {
 
                 pthread_mutex_lock(&conn_mutex);
                 conn_counter--;
-                active_conn;
+                active_conn--;
                 pthread_mutex_unlock(&conn_mutex);
                 continue;
             }
-            pthread_detach(tid); 
+            pthread_detach(tid);
         }
     }
 

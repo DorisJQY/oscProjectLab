@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
     pthread_t tid;
     while (1) {
         pthread_mutex_lock(&conn_mutex);
-        if (conn_counter >= MAX_CONN && active_conn == 0) {
+        if (conn_counter == MAX_CONN && active_conn == 0) {
             pthread_mutex_unlock(&conn_mutex);
             break;
         }

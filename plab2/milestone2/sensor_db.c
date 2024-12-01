@@ -111,7 +111,7 @@ int close_db(FILE * f)
     write(fd[WRITE_END],wmsg,strlen(wmsg)+1);
     memset(wmsg, 0, sizeof(wmsg));
     close(fd[WRITE_END]);
+    waitpid(pid, NULL, 0);
   }
-  waitpid(pid, NULL, 0);
   return i;
 }

@@ -12,8 +12,7 @@
 /**
  * Implements a sequential test server (only one connection at the same time)
  */
-int active_conn = 0;
-pthread_mutex_t conn_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 void* client_handle(void* arg) {
     tcpsock_t* client = (tcpsock_t*)arg;
     sensor_data_t data;
@@ -23,15 +22,12 @@ void* client_handle(void* arg) {
         // read sensor ID
         bytes = sizeof(data.id);
         result = tcp_receive(client, (void*)&data.id, &bytes);
-
         // read temperature
         bytes = sizeof(data.value);
         result = tcp_receive(client, (void*)&data.value, &bytes);
-
         // read timestamp
         bytes = sizeof(data.ts);
         result = tcp_receive(client, (void*)&data.ts, &bytes);
-
         if ((result == TCP_NO_ERROR) && bytes) {
             printf("sensor id = %" PRIu16 " - temperature = %g - timestamp = %ld\n", 
                    data.id, data.value, (long int)data.ts);
@@ -44,9 +40,6 @@ void* client_handle(void* arg) {
         printf("Error occurred on connection to peer\n");
 
     tcp_close(&client);
-    pthread_mutex_lock(&conn_mutex);
-    active_conn--;
-    pthread_mutex_unlock(&conn_mutex);
     return NULL;
 }
 
@@ -66,40 +59,28 @@ int main(int argc, char *argv[]) {
     printf("Test server is started\n");
     if (tcp_passive_open(&server, PORT) != TCP_NO_ERROR) exit(EXIT_FAILURE);
 
-    pthread_t tid;
-    while (1) {
-        pthread_mutex_lock(&conn_mutex);
-        if (conn_counter == MAX_CONN && active_conn == 0) {
-            pthread_mutex_unlock(&conn_mutex);
-            break;
+    pthread_t tid[MAX_CONN];
+    
+    while (conn_counter < MAX_CONN) {
+        if (tcp_wait_for_connection(server, &client) != TCP_NO_ERROR) exit(EXIT_FAILURE);
+        printf("Incoming client connection\n");
+
+        if (pthread_create(&tid[conn_counter], NULL, client_handle, client) != 0) {
+            perror("Failed to create thread");
+            tcp_close(&client);
+            continue;
         }
-        pthread_mutex_unlock(&conn_mutex);
+        conn_counter++;
+    }
 
-        if (conn_counter < MAX_CONN) {
-            if (tcp_wait_for_connection(server, &client) != TCP_NO_ERROR) exit(EXIT_FAILURE);
-            printf("Incoming client connection\n");
-
-            pthread_mutex_lock(&conn_mutex);
-            conn_counter++;
-            active_conn++;
-            pthread_mutex_unlock(&conn_mutex);
-
-            if (pthread_create(&tid, NULL, client_handle, client) != 0) {
-                perror("Failed to create thread");
-                tcp_close(&client);
-
-                pthread_mutex_lock(&conn_mutex);
-                conn_counter--;
-                active_conn--;
-                pthread_mutex_unlock(&conn_mutex);
-                continue;
-            }
-            pthread_detach(tid);
-        }
+    for (int i = 0; i < conn_counter; i++) {
+        pthread_join(tid[i], NULL);
     }
 
     if (tcp_close(&server) != TCP_NO_ERROR) exit(EXIT_FAILURE);
+    
     printf("Test server is shutting down\n");
+
     return 0;
 }
 

@@ -10,9 +10,11 @@
 FILE* binFile;
 FILE* textFile;
 sbuffer_t* sbuffer;
+bool end = false;
 sem_t sem;
 pthread_mutex_t bufferMut;
 pthread_mutex_t textFileMut;
+pthread_mutex_t endMut;
 
 void *writer_thread(void *arg)
 {
@@ -90,12 +92,14 @@ void *reader_thread(void *arg)
 {
   while(1)
   {
-    if(textFile == NULL)
+    pthread_mutex_lock(&endMut);
+    if(end == true)
     {
       printf("End marker detected by reader. Exiting.\n");
       break;
     }
-        
+    pthread_mutex_unlock(&endMut);
+
     //read from buffer
     sem_wait(&sem);
     pthread_mutex_lock(&bufferMut);
@@ -109,9 +113,16 @@ void *reader_thread(void *arg)
 
     if(data.id == 0)
     {
+      pthread_mutex_lock(&textFileMut);
       fclose(textFile);
       textFile = NULL;
+      pthread_mutex_unlock(&textFileMut);
+      
       printf("End marker detected by reader. Exiting.\n");
+      
+      pthread_mutex_lock(&endMut);
+      end = true;
+      pthread_mutex_unlock(&endMut);
       break;
     }
 
@@ -148,6 +159,7 @@ int main()
   sem_init(&sem, 0, 0);
   pthread_mutex_init(&bufferMut, NULL);
   pthread_mutex_init(&textFileMut, NULL);
+  pthread_mutex_init(&endMut, NULL);
 
   if(sbuffer_init(&sbuffer) == -1)
   {
@@ -168,6 +180,7 @@ int main()
   sem_destroy(&sem);
   pthread_mutex_destroy(&bufferMut);
   pthread_mutex_destroy(&textFileMut);
+  pthread_mutex_destroy(&endMut);
 
   if(sbuffer_free(&sbuffer) == -1)
   {

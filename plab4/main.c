@@ -29,7 +29,7 @@ void *writer_thread(void *arg)
 
     if(fread(&sensor_id, sizeof(uint16_t), 1, binFile) != 1)
     {
-      if(feof(binFile)) 
+      if(feof(binFile))
       {
         sensor_id = 0;
       }
@@ -44,11 +44,11 @@ void *writer_thread(void *arg)
     {
       fclose(binFile);
       binFile = NULL;
-            
-      sensor_data_t end_marker = {0, 0.0, 0}; 
+
+      sensor_data_t end_marker = {0, 0.0, 0};
       pthread_mutex_lock(&bufferMut);
       sbuffer_insert(sbuffer, &end_marker);
-      sem_post(&sem); 
+      sem_post(&sem);
       pthread_mutex_unlock(&bufferMut);
 
       printf("End marker created by writer.\n");
@@ -80,10 +80,10 @@ void *writer_thread(void *arg)
       pthread_mutex_unlock(&bufferMut);
       break;
     }
-    sem_post(&sem); 
+    sem_post(&sem);
     pthread_mutex_unlock(&bufferMut);
 
-    usleep(10000); 
+    usleep(10000);
     }
     return NULL;
 }
@@ -117,9 +117,9 @@ void *reader_thread(void *arg)
       fclose(textFile);
       textFile = NULL;
       pthread_mutex_unlock(&textFileMut);
-      
+
       printf("End marker detected by reader. Exiting.\n");
-      
+
       pthread_mutex_lock(&endMut);
       end = true;
       pthread_mutex_unlock(&endMut);
@@ -155,7 +155,7 @@ int main()
     fclose(binFile);
     return -1;
   }
-  
+
   sem_init(&sem, 0, 0);
   pthread_mutex_init(&bufferMut, NULL);
   pthread_mutex_init(&textFileMut, NULL);

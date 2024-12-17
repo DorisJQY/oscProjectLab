@@ -13,6 +13,9 @@
 #define RUN_AVG_LENGTH 5
 #endif
 
+#define SET_MAX_TEMP 30.0
+#define SET_MIN_TEMP 0.0
+
 #ifndef SET_MAX_TEMP
 #error SET_MAX_TEMP not set
 #endif
@@ -20,6 +23,7 @@
 #ifndef SET_MIN_TEMP
 #error SET_MIN_TEMP not set
 #endif
+
 
 /*
  * Use ERROR_HANDLER() for handling memory allocation problems, invalid sensor IDs, non-existing files, etc.
@@ -30,6 +34,18 @@
                         exit(EXIT_FAILURE);                         \
                       }                                             \
                     } while(0)
+
+typedef struct {
+    uint16_t sensor_id;
+    uint16_t room_id;
+    double running_avg;
+    time_t last_modified;
+} element_t;
+
+typedef struct {
+    double measurements[RUN_AVG_LENGTH];
+    int measurement_count;
+} sensor_temp_data_t;
 
 /**
  *  This method holds the core functionality of your datamgr. It takes in 2 file pointers to the sensor files and parses them. 
@@ -74,5 +90,9 @@ time_t datamgr_get_last_modified(sensor_id_t sensor_id);
  *  \return the total amount of sensors
  */
 int datamgr_get_total_sensors();
+
+static element_t *get_sensor_node_by_id(sensor_id_t sensor_id);
+
+static void update_running_avg(uint16_t sensor_id, sensor_temp_data_t *data, double new_temperature, time_t timestamp);
 
 #endif  //DATAMGR_H_

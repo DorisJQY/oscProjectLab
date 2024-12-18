@@ -14,7 +14,7 @@
 #endif
 
 #define SET_MAX_TEMP 30.0
-#define SET_MIN_TEMP 0.0
+#define SET_MIN_TEMP 10.0
 
 #ifndef SET_MAX_TEMP
 #error SET_MAX_TEMP not set

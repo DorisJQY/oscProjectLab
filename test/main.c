@@ -1,8 +1,8 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include "config.h"
-#include <semaphore.h>
 #include "sbuffer.h"
+#include <semaphore.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdbool.h>
@@ -80,7 +80,7 @@ void *data_thread(void *arg)
     if(dataFile == NULL) break;
     //read from buffer
     sensor_data_t data;
-    int result = sbuffer_remove(sbuffer, &data);
+    int result = sbuffer_remove(sbuffer, &data, false);
     if (result == SBUFFER_NO_DATA)
     {
       break;
@@ -89,6 +89,10 @@ void *data_thread(void *arg)
     {
       printf("Read from buffer failed.\n");
       break;
+    }
+    else if (result == SBUFFER_WAIT)
+    {
+      continue;
     }
 
     //write to sensor_data_out.csv
@@ -109,7 +113,7 @@ void *storage_thread(void *arg)
     if(storageFile == NULL) break;
     //read from buffer
     sensor_data_t data;
-    int result = sbuffer_remove(sbuffer, &data);
+    int result = sbuffer_remove(sbuffer, &data, true);
     if (result == SBUFFER_NO_DATA)
     {
       break;
@@ -118,6 +122,10 @@ void *storage_thread(void *arg)
     {
       printf("Read from buffer failed.\n");
       break;
+    }
+    else if (result == SBUFFER_WAIT)
+    {
+      continue;
     }
 
     //write to sensor_data_out.csv

@@ -14,7 +14,8 @@
 typedef struct sbuffer_node {
     struct sbuffer_node *next;  /**< a pointer to the next node*/
     sensor_data_t data;         /**< a structure containing the data */
-    int count;
+    bool data_read;
+    bool storage_read;
 } sbuffer_node_t;
 
 /**
@@ -79,7 +80,7 @@ int sbuffer_free(sbuffer_t **buffer) {
     return SBUFFER_SUCCESS;
 }
 
-int sbuffer_remove(sbuffer_t *buffer, sensor_data_t *data) {
+int sbuffer_remove(sbuffer_t *buffer, sensor_data_t *data, bool storage_manager) {
     sbuffer_node_t *dummy;
     if (buffer == NULL) return SBUFFER_FAILURE;
 
@@ -97,19 +98,41 @@ int sbuffer_remove(sbuffer_t *buffer, sensor_data_t *data) {
 
     *data = buffer->head->data;
     dummy = buffer->head;
-    dummy->count--;
-    if (dummy->count == 0)
-    {
-      if (buffer->head == buffer->tail) // buffer has only one node
-      {
-        buffer->head = buffer->tail = NULL;
-      } 
-      else  // buffer has many nodes empty
-      {
-        buffer->head = buffer->head->next;
-      }
-      free(dummy);
+    
+    if ((storage_manager && dummy->storage_read) || 
+        (!storage_manager && dummy->data_read)) {
+        // 如果已经读取过数据，跳过该节点
+        pthread_mutex_unlock(&bufferMut);
+        return SBUFFER_WAIT;  // 等待下一次尝试
     }
+    
+    if (storage_manager) {
+        dummy->storage_read = true;
+    } else {
+        dummy->data_read = true;
+    }
+    
+    if (dummy->data_read && dummy->storage_read) {
+        // 移除节点并更新缓冲区头
+        if (buffer->head == buffer->tail) { // 只有一个节点
+            buffer->head = buffer->tail = NULL;
+        } else { // 多个节点
+            buffer->head = buffer->head->next;
+        }
+        free(dummy);
+    }
+    
+    
+      //if (buffer->head == buffer->tail) // buffer has only one node
+      //{
+        //buffer->head = buffer->tail = NULL;
+      //} 
+      //else  // buffer has many nodes empty
+      //{
+        //buffer->head = buffer->head->next;
+      //}
+      //free(dummy);
+    
 
     if (data->id == 0)
     {
@@ -134,7 +157,10 @@ int sbuffer_insert(sbuffer_t *buffer, sensor_data_t *data) {
     pthread_mutex_lock(&bufferMut);
     dummy->data = *data;
     dummy->next = NULL;
-    dummy->count = 2;
+    
+    dummy->data_read = false;
+    dummy->storage_read = false;
+    
     if (buffer->tail == NULL) // buffer empty (buffer->head should also be NULL
     {
         buffer->head = buffer->tail = dummy;

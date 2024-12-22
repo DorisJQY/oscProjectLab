@@ -54,7 +54,15 @@ void update_running_avg(sensor_data_t *sensor_data)
       sum += element->values[i];
     }
 
-    element->running_avg = sum / element->count;
+    if (element->count < RUN_AVG_LENGTH)
+    {
+      element->running_avg = sum / element->count;
+    }
+    else
+    {
+      element->running_avg = sum / RUN_AVG_LENGTH;
+    }
+    //element->running_avg = sum / element->count;
     
     if (element->running_avg > SET_MAX_TEMP) 
     {

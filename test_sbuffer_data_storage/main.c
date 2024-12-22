@@ -10,7 +10,7 @@
 #include <stdbool.h>
 
 FILE* binFile;
-FILE* dataFile;
+//FILE* dataFile;
 FILE* storageFile;
 FILE *fp_sensor_map;
 sbuffer_t* sbuffer;
@@ -152,20 +152,20 @@ int main()
     return -1;
   }
 
-  dataFile = fopen("data_out.csv", "a");
-  if(!dataFile)
-  {
-    perror("Failed to open data_out.csv");
-    fclose(binFile);
-    return -1;
-  }
+  //dataFile = fopen("data_out.csv", "a");
+  //if(!dataFile)
+  //{
+    //perror("Failed to open data_out.csv");
+    //fclose(binFile);
+    //return -1;
+  //}
 
   storageFile = open_db("data.csv",false);
   if(!storageFile)
   {
     perror("Failed to open data.csv");
     fclose(binFile);
-    fclose(dataFile);
+    //fclose(dataFile);
     return -1;
   }
   
@@ -189,8 +189,8 @@ int main()
 
   fclose(binFile);
   binFile = NULL;
-  fclose(dataFile);
-  dataFile = NULL;
+  //fclose(dataFile);
+  //dataFile = NULL;
   close_db(storageFile);
 
   if(sbuffer_free(&sbuffer) == -1)

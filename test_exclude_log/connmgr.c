@@ -1,18 +1,11 @@
-/**
- * \author {AUTHOR}
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <inttypes.h>
+#include <pthread.h>
 #include "config.h"
 #include "lib/tcpsock.h"
 #include "sbuffer.h"
-#include <pthread.h>
 
-/**
- * Implements a sequential test server (only one connection at the same time)
- */
  
 extern sbuffer_t* sbuffer;
 
@@ -32,8 +25,10 @@ void* client_handle(void* arg) {
         bytes = sizeof(data.ts);
         result = tcp_receive(client, (void*)&data.ts, &bytes);
         if ((result == TCP_NO_ERROR) && bytes) {
-            printf("sensor id = %" PRIu16 " - temperature = %g - timestamp = %ld\n", data.id, data.value, (long int)data.ts);
+            // insert data to sbuffer
             sbuffer_insert(sbuffer, &data);
+            // print inserted data to terminal
+            printf("sensor id = %" PRIu16 " - temperature = %g - timestamp = %ld\n", data.id, data.value, (long int)data.ts);
         }
     } while (result == TCP_NO_ERROR);
 
@@ -45,7 +40,6 @@ void* client_handle(void* arg) {
     tcp_close(&client);
     return NULL;
 }
-
 
 int connmgr_run(int port, int max_conn)
 {
@@ -82,7 +76,7 @@ int connmgr_run(int port, int max_conn)
 
     sensor_data_t end_marker = {0, 0.0, 0};
     sbuffer_insert(sbuffer, &end_marker);
-    printf("End marker created by connection manager.\n");
+    printf("End marker created by writer.\n");
 
     if (tcp_close(&server) != TCP_NO_ERROR) {
         fprintf(stderr,"Error: tcp_close() failed on server.\n");

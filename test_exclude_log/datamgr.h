@@ -1,7 +1,3 @@
-/**
- * \author {AUTHOR}
- */
-
 #ifndef DATAMGR_H_
 #define DATAMGR_H_
 
@@ -41,32 +37,22 @@ typedef struct {
     int count;
 } element_t;
 
-/**
- *  This method holds the core functionality of your datamgr. It takes in 2 file pointers to the sensor files and parses them. 
- *  When the method finishes all data should be in the internal pointer list and all log messages should be printed to stderr.
- *  \param fp_sensor_map file pointer to the map file
- *  \param fp_sensor_data file pointer to the binary data file
- */
+// parse map file
 void datamgr_parse_sensor_files(FILE *fp_sensor_map);
 
-/**
- * This method should be called to clean up the datamgr, and to free all used memory. 
- * After this, any call to datamgr_get_room_id, datamgr_get_avg, datamgr_get_last_modified or datamgr_get_total_sensors will not return a valid result
- */
+// clean up datamgr
 void datamgr_free();
 
-/**
- *  Return the total amount of unique sensor ID's recorded by the datamgr
- *  \return the total amount of sensors
- */
+// return total amount of sensors
 int datamgr_get_total_sensors();
 
 element_t *get_sensor_node_by_id(sensor_id_t sensor_id);
 
+// calculate average temperature
 void update_running_avg(sensor_data_t *sensor_data);
 
 bool sensor_in_map(sensor_id_t sensor_id);
 
-void print_dplist_contents();
+void print_datamgr_contents();
 
 #endif  //DATAMGR_H_

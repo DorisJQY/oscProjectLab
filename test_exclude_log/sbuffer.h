@@ -1,12 +1,8 @@
-/**
- * \author {AUTHOR}
- */
-
 #ifndef _SBUFFER_H_
 #define _SBUFFER_H_
 
-#include "config.h"
 #include <stdbool.h>
+#include "config.h"
 
 #define SBUFFER_FAILURE -1
 #define SBUFFER_SUCCESS 0

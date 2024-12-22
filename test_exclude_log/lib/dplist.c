@@ -4,7 +4,6 @@
 #include <stdbool.h>
 #include "dplist.h"
 
-// 定义节点和链表结构
 struct dplist_node {
     dplist_node_t *prev, *next;
     void *element;
@@ -17,7 +16,6 @@ struct dplist {
     int (*element_compare)(void *x, void *y);
 };
 
-// 创建链表
 dplist_t *dpl_create(void *(*element_copy)(void *src_element),
                      void (*element_free)(void **element),
                      int (*element_compare)(void *x, void *y)) {
@@ -33,7 +31,6 @@ dplist_t *dpl_create(void *(*element_copy)(void *src_element),
     return list;
 }
 
-// 释放链表
 void dpl_free(dplist_t **list, bool free_element) {
     if (list == NULL || *list == NULL) return;
 
@@ -50,7 +47,6 @@ void dpl_free(dplist_t **list, bool free_element) {
     *list = NULL;
 }
 
-// 插入节点
 dplist_t *dpl_insert_at_index(dplist_t *list, void *element, int index, bool insert_copy) {
     if (list == NULL) return NULL;
 
@@ -61,16 +57,16 @@ dplist_t *dpl_insert_at_index(dplist_t *list, void *element, int index, bool ins
     }
     new_node->element = (insert_copy && list->element_copy) ? list->element_copy(element) : element;
 
-    if (list->head == NULL) { // 链表为空
+    if (list->head == NULL) {
         new_node->prev = NULL;
         new_node->next = NULL;
         list->head = new_node;
-    } else if (index <= 0) { // 插入到头部
+    } else if (index <= 0) {
         new_node->prev = NULL;
         new_node->next = list->head;
         list->head->prev = new_node;
         list->head = new_node;
-    } else { // 插入到中间或尾部
+    } else {
         dplist_node_t *current = list->head;
         int count = 0;
         while (current->next != NULL && count < index) {
@@ -87,17 +83,16 @@ dplist_t *dpl_insert_at_index(dplist_t *list, void *element, int index, bool ins
     return list;
 }
 
-// 删除节点
 dplist_t *dpl_remove_at_index(dplist_t *list, int index, bool free_element) {
     if (list == NULL || list->head == NULL) return list;
 
     dplist_node_t *current = list->head;
     int count = 0;
 
-    if (index <= 0) { // 删除头节点
+    if (index <= 0) {
         list->head = current->next;
         if (list->head != NULL) list->head->prev = NULL;
-    } else { // 删除中间或尾部节点
+    } else {
         while (current->next != NULL && count < index) {
             current = current->next;
             count++;
@@ -113,7 +108,6 @@ dplist_t *dpl_remove_at_index(dplist_t *list, int index, bool free_element) {
     return list;
 }
 
-// 获取链表大小
 int dpl_size(dplist_t *list) {
     if (list == NULL) return 0;
 
@@ -126,7 +120,6 @@ int dpl_size(dplist_t *list) {
     return count;
 }
 
-// 获取指定索引的元素
 void *dpl_get_element_at_index(dplist_t *list, int index) {
     if (list == NULL || list->head == NULL) return NULL;
 
@@ -140,7 +133,6 @@ void *dpl_get_element_at_index(dplist_t *list, int index) {
     return current->element;
 }
 
-// 获取指定引用的元素
 void *dpl_get_element_at_reference(dplist_t *list, dplist_node_t *reference) {
     if (list == NULL || list->head == NULL || reference == NULL) return NULL;
 
@@ -155,7 +147,6 @@ void *dpl_get_element_at_reference(dplist_t *list, dplist_node_t *reference) {
     return NULL;
 }
 
-// 获取元素索引
 int dpl_get_index_of_element(dplist_t *list, void *element) {
     if (list == NULL || list->head == NULL) return -1;
 
@@ -172,7 +163,6 @@ int dpl_get_index_of_element(dplist_t *list, void *element) {
     return -1;
 }
 
-// 获取指定索引的节点引用
 dplist_node_t *dpl_get_reference_at_index(dplist_t *list, int index) {
     if (list == NULL || list->head == NULL) return NULL;
 

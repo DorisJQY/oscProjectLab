@@ -16,7 +16,7 @@ sbuffer_t* sbuffer;
 
 void *connection_thread(void *arg)
 {
-    conn_thread_args_t* args = (conn_thread_args_t*) arg;
+    connmgr_args_t* args = (connmgr_args_t*) arg;
     int port = args->port;
     int max_conn = args->max_conn;
 
@@ -62,7 +62,7 @@ void *data_thread(void *arg)
       printf("Received sensor data with invalid sensor node ID %d",data.id);
     }
   }
-  print_dplist_contents();
+  print_datamgr_contents();
   datamgr_free();
   return NULL;
 }
@@ -105,11 +105,11 @@ int main(int argc, char *argv[])
     	return -1;
     }
 
-    int MAX_CONN = atoi(argv[2]);
-    int PORT = atoi(argv[1]);
-    conn_thread_args_t c_args;
-    c_args.port = PORT;
-    c_args.max_conn = MAX_CONN;
+    int port = atoi(argv[1]);
+    int max_conn = atoi(argv[2]);
+    connmgr_args_t args;
+    args.port = port;
+    args.max_conn = max_conn;
 
   storageFile = open_db("data.csv",false);
   if(!storageFile)
@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
 
   pthread_t writer, reader1, reader2;
 
-  pthread_create(&writer, NULL, connection_thread, &c_args);
+  pthread_create(&writer, NULL, connection_thread, &args);
   pthread_create(&reader1, NULL, data_thread, NULL);
   pthread_create(&reader2, NULL, storage_thread, NULL);
 

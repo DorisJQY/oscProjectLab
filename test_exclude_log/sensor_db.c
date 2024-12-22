@@ -34,5 +34,6 @@ int close_db(FILE * f) {
     return -1;
   }
   i = fclose(f);
+  f = NULL;
   return i;
 }

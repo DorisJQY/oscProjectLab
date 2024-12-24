@@ -28,16 +28,16 @@ void* client_handle(void* arg) {
         bytes = sizeof(data.ts);
         result = tcp_receive(client, (void*)&data.ts, &bytes);
         if ((result == TCP_NO_ERROR) && bytes) {
-            // insert data to sbuffer
-            sbuffer_insert(sbuffer, &data);
-            // print inserted data to terminal
-            printf("sensor id = %" PRIu16 " - temperature = %g - timestamp = %ld\n", data.id, data.value, (long int)data.ts);
-        }
-        
-        if (first_packet) {
+          if (first_packet) {
           char msg[SIZE];
           snprintf(msg, SIZE, "Sensor node %hu has opened a new connection.", data.id);
           write_to_pipe(msg);
+          first_packet = false;
+          }
+          // insert data to sbuffer
+          sbuffer_insert(sbuffer, &data);
+          // print inserted data to terminal
+          printf("sensor id = %" PRIu16 " - temperature = %g - timestamp = %ld\n", data.id, data.value, (long int)data.ts);
         }
     } while (result == TCP_NO_ERROR);
 

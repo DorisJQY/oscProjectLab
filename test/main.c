@@ -19,7 +19,6 @@
 
 pid_t pid;
 int fd[2];
-//char wmsg[SIZE];
 char rmsg[SIZE];
 FILE* fp_data_csv;
 FILE* fp_sensor_map;
@@ -93,9 +92,7 @@ void *storage_thread(void *arg) {
     write_to_pipe(msg);
   }
   close_db(fp_data_csv);
-  char msg[SIZE];
-  snprintf(msg, SIZE, "The data.csv file has been closed.");
-  write_to_pipe(msg);
+  write_to_pipe("The data.csv file has been closed.");
   return NULL;
 }
 
@@ -111,6 +108,7 @@ int write_to_log_file(char *msg) {
 
   const char *current_string = msg;
   while (*current_string != '\0') {
+    if(strcmp(current_string, "End.") == 0) return -1;
     size_t length = strlen(current_string);
     fprintf(fp_gateway_log, "%d - %s - %.*s\n", sequence_number++, time_string, (int)length, current_string);
     fflush(fp_gateway_log);
@@ -166,12 +164,10 @@ int main(int argc, char *argv[]) {
     
     while(1) {
       ssize_t num = read(fd[READ_END], rmsg, SIZE);
-      if(num > 0) {
+      if (num > 0) {
         rmsg[num] = '\0';
-        
-        if(strcmp(rmsg, "End.") == 0)
-          break;
-        write_to_log_file(rmsg);
+        int result = write_to_log_file(rmsg);
+        if (result == -1) break;
       }
       else
         break;

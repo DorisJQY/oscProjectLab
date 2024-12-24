@@ -1,12 +1,10 @@
-/**
- * \author {AUTHOR}
- */
-
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
 #include <stdint.h>
 #include <time.h>
+
+#define SIZE 250
 
 typedef uint16_t sensor_id_t;
 typedef double sensor_value_t;
@@ -21,5 +19,10 @@ typedef struct {
     sensor_ts_t ts;         /** < sensor timestamp */
 } sensor_data_t;
 
+// function for log process
+int write_to_log_file(char *msg);
+
+// function for three managers to write to pipe
+int write_to_pipe(const char *msg);
 
 #endif /* _CONFIG_H_ */

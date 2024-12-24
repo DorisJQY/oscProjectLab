@@ -6,6 +6,7 @@
 #include <sys/wait.h>
 #include "sensor_db.h"
 #include "lib/dplist.h"
+#include "config.h"
 
 FILE * open_db(char * filename, bool append) {
   FILE *fp = NULL;

@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <inttypes.h>
 #include <pthread.h>
+#include <stdbool.h>
+#include <string.h>
 #include "config.h"
 #include "lib/tcpsock.h"
 #include "sbuffer.h"
@@ -13,6 +15,7 @@ void* client_handle(void* arg) {
     tcpsock_t* client = (tcpsock_t*)arg;
     sensor_data_t data;
     int bytes, result;
+    bool first_packet = true;
 
     do {
         // read sensor ID
@@ -30,10 +33,20 @@ void* client_handle(void* arg) {
             // print inserted data to terminal
             printf("sensor id = %" PRIu16 " - temperature = %g - timestamp = %ld\n", data.id, data.value, (long int)data.ts);
         }
+        
+        if (first_packet) {
+          char msg[SIZE];
+          snprintf(msg, SIZE, "Sensor node %hu has opened a new connection.", data.id);
+          write_to_pipe(msg);
+        }
     } while (result == TCP_NO_ERROR);
 
-    if (result == TCP_CONNECTION_CLOSED)
+    if (result == TCP_CONNECTION_CLOSED) {
         printf("Peer has closed connection\n");
+        char msg[SIZE];
+        snprintf(msg, SIZE, "Sensor node %hu has closed the connection.", data.id);
+        write_to_pipe(msg);
+    }
     else
         printf("Error occurred on connection to peer\n");
 

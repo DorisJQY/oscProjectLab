@@ -3,8 +3,10 @@
 #include <stdint.h>
 #include <time.h>
 #include <stdbool.h>
+#include <string.h>
 #include "datamgr.h"
 #include "lib/dplist.h"
+#include "config.h"
 
 
 static dplist_t *list = NULL;
@@ -20,6 +22,9 @@ element_t *get_sensor_node_by_id(sensor_id_t sensor_id) {
     if (data != NULL && data->sensor_id == sensor_id) return data;
   }
   fprintf(stderr, "Error: Sensor ID %d not found.\n", sensor_id);
+  char msg[SIZE];
+  snprintf(msg, SIZE, "Received sensor data with invalid sensor node ID %hu.", sensor_id);
+  write_to_pipe(msg);
   return NULL;
 }
 
@@ -45,10 +50,18 @@ void update_running_avg(sensor_data_t *sensor_data) {
     else
       element->running_avg = sum / RUN_AVG_LENGTH;
     
-    if (element->running_avg > SET_MAX_TEMP) 
+    if (element->running_avg > SET_MAX_TEMP) {
       fprintf(stderr, "Warning: Room %hu is too hot! (%.2f°C)\n", element->room_id, element->running_avg);
-    else if (element->running_avg < SET_MIN_TEMP) 
+      char msg[SIZE];
+      snprintf(msg, SIZE, "Sensor node %hu in room %hu reports it's too hot (avg temp = %.2f°C).", element->sensor_id, element->room_id, element->running_avg);
+      write_to_pipe(msg);
+    }
+    else if (element->running_avg < SET_MIN_TEMP) { 
       fprintf(stderr, "Warning: Room %hu is too cold! (%.2f°C)\n", element->room_id, element->running_avg);
+      char msg[SIZE];
+      snprintf(msg, SIZE, "Sensor node %hu in room %hu reports it's too cold (avg temp = %.2f°C).", element->sensor_id, element->room_id, element->running_avg);
+      write_to_pipe(msg);
+    } 
   }
 }
 

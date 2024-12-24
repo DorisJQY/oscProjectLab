@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include <time.h>
+#include <string.h>
+#include <sys/wait.h>
 #include "config.h"
 #include "datamgr.h"
 #include "sensor_db.h"
@@ -17,7 +19,7 @@
 
 pid_t pid;
 int fd[2];
-char wmsg[SIZE];
+//char wmsg[SIZE];
 char rmsg[SIZE];
 FILE* fp_data_csv;
 FILE* fp_sensor_map;
@@ -86,12 +88,18 @@ void *storage_thread(void *arg) {
     //write to data.csv
     if(fp_data_csv != NULL)
       insert_sensor(fp_data_csv, &data);
+    char msg[SIZE];
+    snprintf(msg, SIZE, "Data insertion from sensor %hu succeeded.",data.id);
+    write_to_pipe(msg);
   }
   close_db(fp_data_csv);
+  char msg[SIZE];
+  snprintf(msg, SIZE, "The data.csv file has been closed.");
+  write_to_pipe(msg);
   return NULL;
 }
 
-int write_to_log_process(char *msg) {
+int write_to_log_file(char *msg) {
 
   time_t now;
   struct tm *local;
@@ -103,11 +111,22 @@ int write_to_log_process(char *msg) {
 
   const char *current_string = msg;
   while (*current_string != '\0') {
-    
     size_t length = strlen(current_string);
     fprintf(fp_gateway_log, "%d - %s - %.*s\n", sequence_number++, time_string, (int)length, current_string);
     fflush(fp_gateway_log);
     current_string += length + 1;
+  }
+  return 0;
+}
+
+int write_to_pipe(const char *msg) {
+  pthread_mutex_lock(&logMut);
+  ssize_t num = write(fd[WRITE_END], msg, strlen(msg) + 1);
+  pthread_mutex_unlock(&logMut);
+
+  if (num == -1) {
+    perror("Failed to write to pipe");
+    return -1;
   }
   return 0;
 }
@@ -127,12 +146,12 @@ int main(int argc, char *argv[]) {
   
   if (pipe(fd) == -1) {
     printf("pipe failed");
-    return NULL;
+    return -1;
   }
   pid = fork();
   if (pid < 0) {
     printf("fork failed");
-    return NULL;
+    return -1;
   }
   
   // log process
@@ -152,7 +171,7 @@ int main(int argc, char *argv[]) {
         
         if(strcmp(rmsg, "End.") == 0)
           break;
-        write_to_log_process(rmsg);
+        write_to_log_file(rmsg);
       }
       else
         break;
@@ -171,6 +190,9 @@ int main(int argc, char *argv[]) {
       perror("Failed to open data.csv");
       return -1;
     }
+    char msg[SIZE];
+    snprintf(msg, SIZE, "A new data.csv file has been created.");
+    write_to_pipe(msg);
   
     fp_sensor_map = fopen("room_sensor.map", "r");
     if (!fp_sensor_map) {
@@ -195,9 +217,7 @@ int main(int argc, char *argv[]) {
     pthread_join(datamgr, NULL);
     pthread_join(sensor_db, NULL);
     
-    snprintf(wmsg, SIZE, "End.");
-    write(fd[WRITE_END],wmsg,strlen(wmsg)+1);
-    memset(wmsg, 0, sizeof(wmsg));
+    write_to_pipe("End.");
     close(fd[WRITE_END]);
     waitpid(pid, NULL, 0);
     

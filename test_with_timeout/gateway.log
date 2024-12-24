@@ -1,0 +1,40 @@
+0 - Tue Dec 24 21:53:13 2024 - A new data.csv file has been created.
+1 - Tue Dec 24 21:53:16 2024 - LOG: Sensor node 15 has opened a new connection.
+2 - Tue Dec 24 21:53:16 2024 - Data insertion from sensor 15 succeeded.
+3 - Tue Dec 24 21:53:17 2024 - Data insertion from sensor 15 succeeded.
+4 - Tue Dec 24 21:53:18 2024 - Data insertion from sensor 15 succeeded.
+5 - Tue Dec 24 21:53:18 2024 - LOG: Sensor node 21 has opened a new connection.
+6 - Tue Dec 24 21:53:18 2024 - Data insertion from sensor 21 succeeded.
+7 - Tue Dec 24 21:53:19 2024 - Data insertion from sensor 15 succeeded.
+8 - Tue Dec 24 21:53:20 2024 - Data insertion from sensor 15 succeeded.
+9 - Tue Dec 24 21:53:20 2024 - LOG: Sensor node 37 has opened a new connection.
+10 - Tue Dec 24 21:53:20 2024 - Sensor node 37 in room 3 reports it's too hot (avg temp = 20.13°C).
+11 - Tue Dec 24 21:53:20 2024 - Data insertion from sensor 37 succeeded.
+12 - Tue Dec 24 21:53:21 2024 - Data insertion from sensor 21 succeeded.
+13 - Tue Dec 24 21:53:21 2024 - Data insertion from sensor 15 succeeded.
+14 - Tue Dec 24 21:53:22 2024 - Data insertion from sensor 15 succeeded.
+15 - Tue Dec 24 21:53:22 2024 - Data insertion from sensor 37 succeeded.
+16 - Tue Dec 24 21:53:22 2024 - Sensor node 37 in room 3 reports it's too hot (avg temp = 20.02°C).
+17 - Tue Dec 24 21:53:23 2024 - Data insertion from sensor 15 succeeded.
+18 - Tue Dec 24 21:53:24 2024 - Data insertion from sensor 21 succeeded.
+19 - Tue Dec 24 21:53:24 2024 - Sensor node 37 in room 3 reports it's too hot (avg temp = 20.02°C).
+20 - Tue Dec 24 21:53:24 2024 - Data insertion from sensor 37 succeeded.
+21 - Tue Dec 24 21:53:24 2024 - Data insertion from sensor 15 succeeded.
+22 - Tue Dec 24 21:53:25 2024 - Data insertion from sensor 15 succeeded.
+23 - Tue Dec 24 21:53:26 2024 - Data insertion from sensor 37 succeeded.
+24 - Tue Dec 24 21:53:26 2024 - Sensor node 37 in room 3 reports it's too hot (avg temp = 20.03°C).
+25 - Tue Dec 24 21:53:26 2024 - Data insertion from sensor 15 succeeded.
+26 - Tue Dec 24 21:53:27 2024 - Data insertion from sensor 21 succeeded.
+27 - Tue Dec 24 21:53:27 2024 - Data insertion from sensor 15 succeeded.
+28 - Tue Dec 24 21:53:28 2024 - Data insertion from sensor 15 succeeded.
+29 - Tue Dec 24 21:53:28 2024 - Sensor node 37 in room 3 reports it's too hot (avg temp = 20.08°C).
+30 - Tue Dec 24 21:53:28 2024 - Data insertion from sensor 37 succeeded.
+31 - Tue Dec 24 21:53:29 2024 - Data insertion from sensor 15 succeeded.
+32 - Tue Dec 24 21:53:30 2024 - Data insertion from sensor 21 succeeded.
+33 - Tue Dec 24 21:53:30 2024 - Data insertion from sensor 15 succeeded.
+34 - Tue Dec 24 21:53:30 2024 - Sensor node 37 in room 3 reports it's too hot (avg temp = 20.16°C).
+35 - Tue Dec 24 21:53:30 2024 - Data insertion from sensor 37 succeeded.
+36 - Tue Dec 24 21:53:31 2024 - LOG: Sensor node 21 has closed the connection.
+37 - Tue Dec 24 21:53:31 2024 - LOG: Sensor node 37 has closed the connection.
+38 - Tue Dec 24 21:53:31 2024 - LOG: Sensor node 15 has closed the connection.
+39 - Tue Dec 24 21:53:31 2024 - The data.csv file has been closed.

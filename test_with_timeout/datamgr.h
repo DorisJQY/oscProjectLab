@@ -51,8 +51,7 @@ element_t *get_sensor_node_by_id(sensor_id_t sensor_id);
 // calculate average temperature
 void update_running_avg(sensor_data_t *sensor_data);
 
-bool sensor_in_map(sensor_id_t sensor_id);
-
+// debug function
 void print_datamgr_contents();
 
 #endif  //DATAMGR_H_

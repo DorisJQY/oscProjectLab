@@ -20,7 +20,6 @@ void* client_handle(void* arg) {
     int bytes, result;
     bool first_packet = true;
 
-    // 获取套接字文件描述符
     int sockfd;
     if (tcp_get_sd(client, &sockfd) != TCP_NO_ERROR) {
         fprintf(stderr, "Failed to get socket descriptor.\n");
@@ -28,29 +27,30 @@ void* client_handle(void* arg) {
         return NULL;
     }
 
-    // 设置接收超时
+    // initialize timeval structure for setting receive timeout
     struct timeval tv;
-    tv.tv_sec = TIMEOUT; // 超时时间（秒），从 Makefile 中定义
+    tv.tv_sec = TIMEOUT;
     tv.tv_usec = 0;
 
+    // set receive timeout option on the socket
     if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv)) < 0) {
-        perror("setsockopt failed");
+        fprintf(stderr, "setsockopt failed: %s\n", strerror(errno));
         tcp_close(&client);
         return NULL;
     }
 
     do {
-        // 读取传感器ID
+        // read sensor ID
         bytes = sizeof(data.id);
         result = tcp_receive(client, (void*)&data.id, &bytes);
         if (result != TCP_NO_ERROR) break;
 
-        // 读取温度
+        // read temperature
         bytes = sizeof(data.value);
         result = tcp_receive(client, (void*)&data.value, &bytes);
         if (result != TCP_NO_ERROR) break;
 
-        // 读取时间戳
+        // read timestamp
         bytes = sizeof(data.ts);
         result = tcp_receive(client, (void*)&data.ts, &bytes);
         if (result != TCP_NO_ERROR) break;
@@ -58,35 +58,31 @@ void* client_handle(void* arg) {
         if ((result == TCP_NO_ERROR) && bytes) {
             if (first_packet) {
                 char msg[SIZE];
-                snprintf(msg, SIZE, "LOG: Sensor node %hu has opened a new connection.", data.id);
+                snprintf(msg, SIZE, "Sensor node %hu has opened a new connection.", data.id);
                 write_to_pipe(msg);
                 first_packet = false;
             }
-            // 插入数据到共享缓冲区
+            // insert data to sbuffer
             sbuffer_insert(sbuffer, &data);
-            // 打印插入的数据到终端
-            printf("sensor id = %" PRIu16 " - temperature = %g - timestamp = %ld\n", data.id, data.value, (long int)data.ts);
+            // print inserted data to terminal
+            printf("sensor id = %hu - temperature = %.6f - timestamp = %ld\n", data.id, data.value, (long int)data.ts);
         }
     } while (result == TCP_NO_ERROR);
 
     if (result == TCP_CONNECTION_CLOSED) {
         printf("Peer has closed connection\n");
         char msg[SIZE];
-        snprintf(msg, SIZE, "LOG: Sensor node %hu has closed the connection.", data.id);
+        snprintf(msg, SIZE, "Sensor node %hu has closed the connection.", data.id);
         write_to_pipe(msg);
     }
     else if (result == TCP_TIMEOUT_ERROR) {
-        printf("Connection timed out for sensor node %hu\n", data.id);
+        printf("Connection time out for sensor node %hu\n", data.id);
         char msg[SIZE];
-        snprintf(msg, SIZE, "LOG: Sensor node %hu connection timed out.", data.id);
+        snprintf(msg, SIZE, "Sensor node %hu connection time out.", data.id);
         write_to_pipe(msg);
     }
-    else {
-        printf("Error occurred on connection to peer\n");
-        char msg[SIZE];
-        snprintf(msg, SIZE, "LOG: Sensor node %hu encountered an error.", data.id);
-        write_to_pipe(msg);
-    }
+    else
+      printf("Error occurred on connection to peer\n");
 
     tcp_close(&client);
     return NULL;
@@ -115,7 +111,7 @@ int connmgr_run(int port, int max_conn)
         printf("Incoming client connection\n");
 
         if (pthread_create(&tid[conn_counter], NULL, client_handle, client) != 0) {
-            perror("Failed to create thread");
+            fprintf(stderr, "Failed to create thread: %s\n", strerror(errno));
             tcp_close(&client);
             continue;
         }

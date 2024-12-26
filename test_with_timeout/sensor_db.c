@@ -19,18 +19,21 @@ FILE * open_db(char * filename, bool append) {
 
 int insert_sensor(FILE * f, sensor_data_t *sensor_data) {
   int i;
-  if(f == NULL) {
+  if (f == NULL) {
     printf("file open failed");
     return -1;
   }
-  i = fprintf(f,"%u, %.6f, %ld\n",sensor_data->id,sensor_data->value,sensor_data->ts);
+  i = fprintf(f,"%hu, %.6f, %ld\n",sensor_data->id,sensor_data->value,sensor_data->ts);
   fflush(f);
+  char msg[SIZE];
+  snprintf(msg, SIZE, "Data insertion from sensor %hu succeeded.", sensor_data->id);
+  write_to_pipe(msg);
   return i;
 }
 
 int close_db(FILE * f) {
   int i;
-  if(f==NULL) {
+  if (f==NULL) {
     printf("file open failed");
     return -1;
   }

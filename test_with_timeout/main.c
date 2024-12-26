@@ -35,9 +35,9 @@ void *connection_thread(void *arg) {
 
   int result = connmgr_run(port, max_conn);
   if (result == 0)
-    printf("[connection_thread] connmgr_run finished successfully.\n");
+    printf("Connection manager finished successfully.\n");
   else
-    printf("[connection_thread] connmgr_run returned error (%d).\n", result);
+    printf("Connection manager returned error (%d).\n", result);
 
   return NULL;
 }
@@ -60,10 +60,7 @@ void *data_thread(void *arg) {
     else if (result == SBUFFER_WAIT)
       continue;
 
-    if (sensor_in_map(data.id) == true)
-      update_running_avg(&data);
-    else
-      printf("Received sensor data with invalid sensor node ID %d",data.id);
+    update_running_avg(&data);
   }
   print_datamgr_contents();
   datamgr_free();
@@ -87,12 +84,11 @@ void *storage_thread(void *arg) {
     //write to data.csv
     if(fp_data_csv != NULL)
       insert_sensor(fp_data_csv, &data);
-    char msg[SIZE];
-    snprintf(msg, SIZE, "Data insertion from sensor %hu succeeded.",data.id);
-    write_to_pipe(msg);
   }
-  close_db(fp_data_csv);
-  write_to_pipe("The data.csv file has been closed.");
+  if (close_db(fp_data_csv) == 0)
+    write_to_pipe("The data.csv file has been closed.");
+  else
+    fprintf(stderr, "Failed to close data.csv");
   return NULL;
 }
 
@@ -123,7 +119,7 @@ int write_to_pipe(const char *msg) {
   pthread_mutex_unlock(&logMut);
 
   if (num == -1) {
-    perror("Failed to write to pipe");
+    fprintf(stderr, "Failed to write to pipe");
     return -1;
   }
   return 0;
@@ -158,7 +154,7 @@ int main(int argc, char *argv[]) {
     close(fd[WRITE_END]);
     fp_gateway_log = fopen("gateway.log", "w");
     if (!fp_gateway_log) {
-      perror("Failed to open gateway.log");
+      fprintf(stderr, "Failed to open gateway.log");
       exit(-1);
     }
     
@@ -183,7 +179,7 @@ int main(int argc, char *argv[]) {
     close(fd[READ_END]);
     fp_data_csv = open_db("data.csv",false);
     if (!fp_data_csv) {
-      perror("Failed to open data.csv");
+      fprintf(stderr, "Failed to open data.csv");
       return -1;
     }
     char msg[SIZE];
@@ -192,7 +188,7 @@ int main(int argc, char *argv[]) {
   
     fp_sensor_map = fopen("room_sensor.map", "r");
     if (!fp_sensor_map) {
-      perror("Failed to open room_sensor.map");
+      fprintf(stderr, "Failed to open room_sensor.map");
       return -1;
     }
 
@@ -218,8 +214,6 @@ int main(int argc, char *argv[]) {
     waitpid(pid, NULL, 0);
     
     if (pthread_mutex_destroy(&logMut) != 0) return -1;
-
-    close_db(fp_data_csv);
 
     if(sbuffer_free(&sbuffer) == -1) {
       printf("Free buffer failed.\n");

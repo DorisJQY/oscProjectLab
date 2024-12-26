@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <time.h>
-#include <stdbool.h>
 #include <string.h>
+#include <stdbool.h>
 #include "datamgr.h"
 #include "lib/dplist.h"
 #include "config.h"
@@ -51,15 +51,15 @@ void update_running_avg(sensor_data_t *sensor_data) {
       element->running_avg = sum / RUN_AVG_LENGTH;
     
     if (element->running_avg > SET_MAX_TEMP) {
-      fprintf(stderr, "Warning: Room %hu is too hot! (%.2f°C)\n", element->room_id, element->running_avg);
+      fprintf(stderr, "Warning: Room %hu is too hot! (%.6f°C)\n", element->room_id, element->running_avg);
       char msg[SIZE];
-      snprintf(msg, SIZE, "Sensor node %hu in room %hu reports it's too hot (avg temp = %.2f°C).", element->sensor_id, element->room_id, element->running_avg);
+      snprintf(msg, SIZE, "Sensor node %hu in room %hu reports it's too hot (avg temp = %.6f°C).", element->sensor_id, element->room_id, element->running_avg);
       write_to_pipe(msg);
     }
     else if (element->running_avg < SET_MIN_TEMP) { 
-      fprintf(stderr, "Warning: Room %hu is too cold! (%.2f°C)\n", element->room_id, element->running_avg);
+      fprintf(stderr, "Warning: Room %hu is too cold! (%.6f°C)\n", element->room_id, element->running_avg);
       char msg[SIZE];
-      snprintf(msg, SIZE, "Sensor node %hu in room %hu reports it's too cold (avg temp = %.2f°C).", element->sensor_id, element->room_id, element->running_avg);
+      snprintf(msg, SIZE, "Sensor node %hu in room %hu reports it's too cold (avg temp = %.6f°C).", element->sensor_id, element->room_id, element->running_avg);
       write_to_pipe(msg);
     } 
   }
@@ -92,15 +92,8 @@ void datamgr_free() {
   dpl_free(&list, true);
 }
 
-
 int datamgr_get_total_sensors() {
   return dpl_size(list);
-}
-
-bool sensor_in_map(sensor_id_t sensor_id) {
-  element_t* result = get_sensor_node_by_id(sensor_id);
-  if (result == NULL) return false;
-  return true;
 }
 
 void print_datamgr_contents() {
@@ -114,7 +107,7 @@ void print_datamgr_contents() {
   for (int i = 0; i < dpl_size(list); i++) {
     element_t *data = dpl_get_element_at_index(list, i);
     if (data != NULL)
-      printf("Sensor ID: %hu, Room ID: %hu, Running Avg: %.2f, Count: %d\n", data->sensor_id, data->room_id, data->running_avg, data->count);
+      printf("Sensor ID: %hu, Room ID: %hu, Running Avg: %.6f, Count: %d\n", data->sensor_id, data->room_id, data->running_avg, data->count);
   }
 }
 

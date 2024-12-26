@@ -15,27 +15,27 @@
 extern sbuffer_t* sbuffer;
 
 void* client_handle(void* arg) {
-    tcpsock_t* client = (tcpsock_t*)arg;
-    sensor_data_t data;
-    int bytes, result;
-    bool first_packet = true;
+  tcpsock_t* client = (tcpsock_t*)arg;
+  sensor_data_t data;
+  int bytes, result;
+  bool first_packet = true;
 
-    int sockfd;
-    if (tcp_get_sd(client, &sockfd) != TCP_NO_ERROR) {
-        fprintf(stderr, "Failed to get socket descriptor.\n");
-        tcp_close(&client);
-        return NULL;
-    }
+  int sockfd;
+  if (tcp_get_sd(client, &sockfd) != TCP_NO_ERROR) {
+    fprintf(stderr, "Failed to get socket descriptor.\n");
+    tcp_close(&client);
+    return NULL;
+  }
 
-    // initialize timeval structure for setting receive timeout
-    struct timeval tv;
-    tv.tv_sec = TIMEOUT;
-    tv.tv_usec = 0;
+  // initialize timeval structure for setting receive timeout
+  struct timeval tv;
+  tv.tv_sec = TIMEOUT;
+  tv.tv_usec = 0;
 
-    // set receive timeout option on the socket
-    if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv)) < 0) {
-        fprintf(stderr, "setsockopt failed: %s\n", strerror(errno));
-        tcp_close(&client);
+  // set receive timeout option on the socket
+  if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv)) < 0) {
+    fprintf(stderr, "setsockopt failed: %s\n", strerror(errno));
+    tcp_close(&client);
         return NULL;
     }
 

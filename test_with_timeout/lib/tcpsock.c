@@ -200,44 +200,32 @@ int tcp_send(tcpsock_t *socket, void *buffer, int *buf_size) {
     return TCP_NO_ERROR;
 }
 
-//int tcp_receive(tcpsock_t *socket, void *buffer, int *buf_size) {
-    //TCP_ERR_HANDLER(socket == NULL, return TCP_SOCKET_ERROR);
-    //TCP_ERR_HANDLER(socket->cookie != MAGIC_COOKIE, return TCP_SOCKET_ERROR);
-    //if ((buffer == NULL) || (buf_size == 0))  //nothing to read
-    //{
-        //*buf_size = 0;
-        //return TCP_NO_ERROR;
-    //}
-    //*buf_size = recv(socket->sd, buffer, *buf_size, 0);
-    //TCP_DEBUG_PRINTF(*buf_size == 0, "Recv() : no connection to peer\n");
-    //TCP_ERR_HANDLER(*buf_size == 0, return TCP_CONNECTION_CLOSED);
-    //TCP_DEBUG_PRINTF((*buf_size < 0) && (errno == ENOTCONN), "Recv() : no connection to peer\n");
-    //TCP_ERR_HANDLER((*buf_size < 0) && (errno == ENOTCONN), return TCP_CONNECTION_CLOSED);
-    //TCP_DEBUG_PRINTF(*buf_size < 0, "Recv() failed with errno = %d [%s]", errno, strerror(errno));
-    //TCP_ERR_HANDLER(*buf_size < 0, return TCP_SOCKOP_ERROR);
-    //return TCP_NO_ERROR;
-//}
-
 int tcp_receive(tcpsock_t *socket, void *buffer, int *buf_size) {
     TCP_ERR_HANDLER(socket == NULL, return TCP_SOCKET_ERROR);
     TCP_ERR_HANDLER(socket->cookie != MAGIC_COOKIE, return TCP_SOCKET_ERROR);
-    if ((buffer == NULL) || (buf_size == 0))  //nothing to read
-    {
-        *buf_size = 0;
+
+    // nothing to read
+    if ((buffer == NULL) || (buf_size == NULL) || (*buf_size == 0)) {
+        if (buf_size != NULL) {
+            *buf_size = 0;
+        }
         return TCP_NO_ERROR;
     }
     *buf_size = recv(socket->sd, buffer, *buf_size, 0);
+
     if (*buf_size < 0) {
         if (errno == EWOULDBLOCK || errno == EAGAIN) {
-            return TCP_TIMEOUT_ERROR; // 超时错误
+            return TCP_TIMEOUT_ERROR; // timeout error
         }
         if (errno == ENOTCONN) {
+            TCP_DEBUG_PRINTF((*buf_size < 0) && (errno == ENOTCONN), "Recv() : no connection to peer\n");
             return TCP_CONNECTION_CLOSED;
         }
-        return TCP_SOCKOP_ERROR; // 其他错误
-    }
-    else if (*buf_size == 0) {
-        return TCP_CONNECTION_CLOSED; // 连接关闭
+        TCP_DEBUG_PRINTF(*buf_size < 0, "Recv() failed with errno = %d [%s]", errno, strerror(errno));
+        return TCP_SOCKOP_ERROR;
+    } else if (*buf_size == 0) {
+        TCP_DEBUG_PRINTF(*buf_size == 0, "Recv() : no connection to peer\n");
+        return TCP_CONNECTION_CLOSED;
     }
     return TCP_NO_ERROR;
 }
